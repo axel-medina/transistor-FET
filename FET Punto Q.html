@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FET: Calculadora del Punto Q</title>
+    <style>
+        .result-box {
+            display: inline-block;
+            background-color: #e0f7fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculadora del punto Q de un transistor FET</h1>
+    <h2>Cálculo de intersección entre la curva de transferencia y recta de carga</h2>
+    <h4>Created by Axel Medina</h4>
+    <form id="inputForm">
+        <label for="IDSS">IDSS:</label>
+        <input type="number" id="IDSS" step="any" required>
+        <select id="unitIDSS">
+            <option value="mA">mA</option>
+            <option value="uA">μA</option>
+        </select><br><br>
+
+        <label for="Vp">Vp:</label>
+        <input type="number" id="Vp" step="any" required>
+        <select id="unitVp">
+            <option value="V">V</option>
+        </select><br><br>
+
+        <label for="m">Pendiente (m):</label>
+        <input type="number" id="m" step="any" required><br><br>
+
+        <button type="button" onclick="calculateIntersection()">Calcular</button>
+    </form>
+
+    <h2>Resultado</h2>
+    <div id="result"></div>
+
+    <script>
+        function calculateIntersection() {
+            const IDSS = parseFloat(document.getElementById('IDSS').value);
+            const unitIDSS = document.getElementById('unitIDSS').value;
+            const Vp = parseFloat(document.getElementById('Vp').value);
+            const m = parseFloat(document.getElementById('m').value);
+
+            if (isNaN(IDSS) || IDSS < 0) {
+                document.getElementById('result').innerHTML = 'No se admiten números negativos para IDSS. Intenta de nuevo :)';
+                return;
+            }
+
+            if (Vp > 0) {
+                document.getElementById('result').innerHTML = 'La tensión Vp no admite valores positivos. Intenta otra vez :)';
+                return;
+            }
+
+            if (m > 0) {
+                document.getElementById('result').innerHTML = 'La pendiente solo puede ser negativa, dado que la recta forma un ángulo obtuso con respecto al eje x. Intenta de nuevo :)';
+                return;
+            }
+
+            const a = IDSS / Math.pow(Vp, 2);
+            const b = -(2 * IDSS / Vp + m);
+            const c = IDSS;
+
+            const discriminant = Math.pow(b, 2) - 4 * a * c;
+
+            if (discriminant < 0) {
+                document.getElementById('result').textContent = 'No hay soluciones reales.';
+                return;
+            }
+
+            const VGSQ1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+            const VGSQ2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+
+            let resultText = '';
+            const unitLabel = unitIDSS === 'mA' ? 'mA' : 'μA';
+
+            if (VGSQ1 > Vp) {
+                const IDQ1 = m * VGSQ1;
+                resultText += `<div class="result-box">VGSQ: ${VGSQ1.toFixed(2)} V<br>IDQ: ${IDQ1.toFixed(2)} ${unitLabel}</div>`;
+            }
+
+            if (VGSQ2 > Vp) {
+                const IDQ2 = m * VGSQ2;
+                resultText += `<div class="result-box">VGSQ: ${VGSQ2.toFixed(2)} V<br>IDQ: ${IDQ2.toFixed(2)} ${unitLabel}</div>`;
+            }
+
+            if (resultText === '') {
+                resultText = 'No hay soluciones donde VGSQ > Vp.';
+            }
+
+            document.getElementById('result').innerHTML = resultText;
+        }
+    </script>
+</body>
+</html>

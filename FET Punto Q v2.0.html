@@ -1,0 +1,282 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FET: Calculadora del Punto Q</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .result-box {
+            display: inline-block;
+            background-color: #e0f7fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input[type="number"], select {
+            margin-bottom: 10px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculadora del punto Q de un transistor FET</h1>
+    <h2>Cálculo de intersección entre la curva de transferencia y recta de carga</h2>
+    <h4>Created by Axel Medina</h4>
+
+    <label for="configurationType">Selecciona el tipo de polarización:</label>
+    <select id="configurationType" onchange="showConfiguration()">
+        <option value="">Selecciona una opción</option>
+        <option value="autopolarizacion">Autopolarización</option>
+        <option value="divisorVoltaje">Divisor de voltaje</option>
+    </select>
+
+    <div id="autopolarizacionForm" class="hidden">
+        <h3>Autopolarización</h3>
+        <form id="inputFormAuto">
+            <label for="IDSS">IDSS:</label>
+            <input type="number" id="IDSS" step="any" required>
+            <select id="unitIDSS">
+                <option value="mA">mA</option>
+                <option value="uA">μA</option>
+            </select><br>
+
+            <label for="Vp">Vp:</label>
+            <input type="number" id="Vp" step="any" required>
+            <select id="unitVp">
+                <option value="V">V</option>
+            </select><br>
+
+            <label for="Rs">Rs:</label>
+            <input type="number" id="Rs" step="any" required>
+            <select id="unitRs">
+                <option value="Ω">Ω</option>
+                <option value="kΩ">kΩ</option>
+                <option value="MΩ">MΩ</option>
+            </select><br>
+
+            <button type="button" onclick="calculateIntersection()">Calcular</button>
+        </form>
+    </div>
+
+    <div id="divisorVoltajeForm" class="hidden">
+        <h3>Divisor de voltaje</h3>
+        <form id="inputFormDivisor">
+            <label for="VDD">VDD:</label>
+            <input type="number" id="VDD" step="any" required>
+            <select id="unitVDD">
+                <option value="V">V</option>
+            </select><br>
+
+            <label for="R1">R1:</label>
+            <input type="number" id="R1" step="any" required>
+            <select id="unitR1">
+                <option value="Ω">Ω</option>
+                <option value="kΩ">kΩ</option>
+                <option value="MΩ">MΩ</option>
+            </select><br>
+
+            <label for="R2">R2 (Se calculará el divisor de tensión):</label>
+            <input type="number" id="R2" step="any" required>
+            <select id="unitR2">
+                <option value="Ω">Ω</option>
+                <option value="kΩ">kΩ</option>
+                <option value="MΩ">MΩ</option>
+            </select><br>
+
+            <label for="RsDivisor">Rs:</label>
+            <input type="number" id="RsDivisor" step="any" required>
+            <select id="unitRsDivisor">
+                <option value="Ω">Ω</option>
+                <option value="kΩ">kΩ</option>
+                <option value="MΩ">MΩ</option>
+            </select><br>
+
+            <label for="IDSSDivisor">IDSS:</label>
+            <input type="number" id="IDSSDivisor" step="any" required>
+            <select id="unitIDSSDivisor">
+                <option value="mA">mA</option>
+                <option value="uA">μA</option>
+            </select><br>
+
+            <label for="VpDivisor">Vp:</label>
+            <input type="number" id="VpDivisor" step="any" required>
+            <select id="unitVpDivisor">
+                <option value="V">V</option>
+            </select><br>
+
+            <button type="button" onclick="calculateDivisorVoltaje()">Calcular</button>
+        </form>
+    </div>
+
+    <h2>Resultado</h2>
+    <div id="result"></div>
+
+    <script>
+        function showConfiguration() {
+            const configurationType = document.getElementById('configurationType').value;
+            document.getElementById('autopolarizacionForm').classList.add('hidden');
+            document.getElementById('divisorVoltajeForm').classList.add('hidden');
+            document.getElementById('result').innerHTML = '';
+
+            if (configurationType === 'autopolarizacion') {
+                document.getElementById('autopolarizacionForm').classList.remove('hidden');
+            } else if (configurationType === 'divisorVoltaje') {
+                document.getElementById('divisorVoltajeForm').classList.remove('hidden');
+            }
+        }
+
+        function calculateIntersection() {
+            const IDSS = parseFloat(document.getElementById('IDSS').value);
+            const unitIDSS = document.getElementById('unitIDSS').value;
+            const Vp = parseFloat(document.getElementById('Vp').value);
+            const Rs = parseFloat(document.getElementById('Rs').value);
+            const unitRs = document.getElementById('unitRs').value;
+
+            if (isNaN(IDSS) || IDSS < 0) {
+                document.getElementById('result').innerHTML = 'No se admiten números negativos para IDSS. Intenta de nuevo :)';
+                return;
+            }
+
+            if (Vp > 0) {
+                document.getElementById('result').innerHTML = 'La tensión Vp no admite valores positivos. Intenta otra vez :)';
+                return;
+            }
+
+            // Ajustar Rs según la unidad seleccionada
+            let RsAdjusted = adjustResistance(Rs, unitRs);
+
+            const y = unitIDSS === 'mA' ? 1e-3 : 1e-6;  // Convertir y a amperios si es necesario
+            const x = -y * RsAdjusted;
+
+            const m = 1 / x;
+
+            const a = IDSS / Math.pow(Vp, 2);
+            const b = -(2 * IDSS / Vp + m);
+            const c = IDSS;
+
+            const discriminant = Math.pow(b, 2) - 4 * a * c;
+
+            if (discriminant < 0) {
+                document.getElementById('result').textContent = 'No hay soluciones reales.';
+                return;
+            }
+
+            const VGSQ1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+            const VGSQ2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+
+            let resultText = '';
+            const unitLabel = unitIDSS === 'mA' ? 'mA' : 'μA';
+
+            if (VGSQ1 > Vp) {
+                const IDQ1 = m * VGSQ1;
+                resultText += `<div class="result-box">VGSQ: ${VGSQ1.toFixed(2)} V<br>IDQ: ${IDQ1.toFixed(2)} ${unitLabel}</div>`;
+            }
+
+            if (VGSQ2 > Vp) {
+                const IDQ2 = m * VGSQ2;
+                resultText += `<div class="result-box">VGSQ: ${VGSQ2.toFixed(2)} V<br>IDQ: ${IDQ2.toFixed(2)} ${unitLabel}</div>`;
+            }
+
+            if (resultText === '') {
+                resultText = 'No hay soluciones donde VGSQ > Vp.';
+            }
+
+            document.getElementById('result').innerHTML = resultText;
+        }
+
+        function calculateDivisorVoltaje() {
+            const VDD = parseFloat(document.getElementById('VDD').value);
+            const R1 = parseFloat(document.getElementById('R1').value);
+            const R2 = parseFloat(document.getElementById('R2').value);
+            const Rs = parseFloat(document.getElementById('RsDivisor').value);
+            const IDSS = parseFloat(document.getElementById('IDSSDivisor').value);
+            const Vp = parseFloat(document.getElementById('VpDivisor').value);
+
+            const unitR1 = document.getElementById('unitR1').value;
+            const unitR2 = document.getElementById('unitR2').value;
+            const unitRs = document.getElementById('unitRsDivisor').value;
+            const unitIDSS = document.getElementById('unitIDSSDivisor').value;
+
+            // Ajustar resistencias según la unidad seleccionada
+            const R1Adjusted = adjustResistance(R1, unitR1);
+            const R2Adjusted = adjustResistance(R2, unitR2);
+            const RsAdjusted = adjustResistance(Rs, unitRs);
+
+            // Calcular VG
+            const VG = (R2Adjusted * VDD) / (R1Adjusted + R2Adjusted);
+
+            // Convertir IDSS a amperios
+            const IDSSAmp = unitIDSS === 'mA' ? IDSS / 1000 : IDSS / 1000000;
+
+            // Función para resolver la ecuación VGS = VG - ID * RS igualada a la ecuación de Shockley
+            function solveEquation(VGS) {
+                const ID = IDSSAmp * Math.pow(1 - VGS / Vp, 2);
+                return VGS - (VG - ID * RsAdjusted);
+            }
+
+            // Método de Newton-Raphson para encontrar VGS
+            let VGSQ = VG; // Valor inicial
+            const maxIterations = 1000;
+            const tolerance = 1e-6;
+            let iteration = 0;
+
+            while (iteration < maxIterations) {
+                const f = solveEquation(VGSQ);
+                // Derivada numérica
+                const h = 1e-6;
+                const df = (solveEquation(VGSQ + h) - f) / h;
+                
+                const deltaVGS = f / df;
+                VGSQ -= deltaVGS;
+                
+                if (Math.abs(deltaVGS) < tolerance) {
+                    break;
+                }
+                iteration++;
+            }
+
+            // Calcular IDQ
+            const IDQ = IDSSAmp * Math.pow(1 - VGSQ / Vp, 2);
+
+            // Mostrar resultado
+            let resultText = '';
+            const unitLabel = unitIDSS;
+            const IDQDisplay = unitIDSS === 'mA' ? IDQ * 1000 : IDQ * 1000000;
+            resultText = `
+                <div class="result-box">
+                    VGSQ: ${VGSQ.toFixed(2)} V<br>
+                    IDQ: ${IDQDisplay.toFixed(2)} ${unitLabel}
+                </div>`;
+
+            document.getElementById('result').innerHTML = resultText;
+        }
+
+        function adjustResistance(value, unit) {
+            switch (unit) {
+                case 'kΩ': return value * 1000;
+                case 'MΩ': return value * 1000000;
+                default: return value;
+            }
+        }
+    </script>
+</body>
+</html>
