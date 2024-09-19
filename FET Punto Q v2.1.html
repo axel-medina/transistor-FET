@@ -1,0 +1,597 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FET: Calculadora del Punto Q</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        background-color: #fbfbeb;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .titulo-container {
+        border: 2px solid #333;
+        border-radius: 8px;
+        padding: 20px;
+        background-color: #e9ffeb;
+        margin: 20px 0;
+      }
+
+      .result-box {
+        display: inline-block;
+        background-color: #e0f7fa;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+      }
+      .hidden {
+        display: none;
+      }
+      form {
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      label {
+        display: inline-block;
+        width: 50px;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      input[type="number"],
+      select {
+        margin-bottom: 10px;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 15px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      #configurationType {
+        width: 100%; /* Para que ocupe toda la línea */
+        margin-top: 10px; /* Espaciado entre el título y el menú */
+        padding: 8px; /* Espaciado interno para que sea más cómodo de usar */
+        font-size: 16px; /* Tamaño de fuente */
+        box-sizing: border-box; /* Para incluir padding en el ancho total */
+      }
+
+      #chartContainer {
+        width: 100%;
+        height: 400px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="titulo-container">
+      <h1>Calculadora del punto Q de un transistor FET</h1>
+      <h2>
+        Cálculo de intersección entre la curva de transferencia y recta de carga
+      </h2>
+      <h4>
+        Created by
+        <a href="https://www.instagram.com/axel.medina07" target="_blank"
+          >Axel Medina</a
+        >
+      </h4>
+    </div>
+
+    <label for="configurationType" style="display: inline-block; width: auto"
+      >Selecciona el tipo de polarización:</label
+    >
+    <select id="configurationType" onchange="showConfiguration()">
+      <option value="">Selecciona una opción</option>
+      <option value="autopolarizacion">Autopolarización</option>
+      <option value="divisorVoltaje">Divisor de voltaje</option>
+    </select>
+
+    <div id="autopolarizacionForm" class="hidden">
+      <h3>Autopolarización</h3>
+      <form id="inputFormAuto">
+        <label for="IDSS">IDSS:</label>
+        <input type="number" id="IDSS" step="any" required size="15" />
+        <select id="unitIDSS">
+          <option value="mA">mA</option>
+          <option value="uA">μA</option></select
+        ><br />
+
+        <label for="Vp">Vp:</label>
+        <input type="number" id="Vp" step="any" required size="15" />
+        <select id="unitVp">
+          <option value="V">V</option></select
+        ><br />
+
+        <label for="Rs">Rs:</label>
+        <input type="number" id="Rs" step="any" required size="15" />
+        <select id="unitRs">
+          <option value="Ω">Ω</option>
+          <option value="kΩ">kΩ</option>
+          <option value="MΩ">MΩ</option></select
+        ><br />
+
+        <button type="button" onclick="calculateIntersection()">
+          Calcular
+        </button>
+      </form>
+    </div>
+
+    <div id="divisorVoltajeForm" class="hidden">
+      <h3>Divisor de voltaje</h3>
+      <form id="inputFormDivisor">
+        <label for="VDD">VDD:</label>
+        <input type="number" id="VDD" step="any" required size="15" />
+        <select id="unitVDD">
+          <option value="V">V</option></select
+        ><br />
+
+        <label for="R1">R1:</label>
+        <input type="number" id="R1" step="any" required size="15" />
+        <select id="unitR1">
+          <option value="Ω">Ω</option>
+          <option value="kΩ">kΩ</option>
+          <option value="MΩ">MΩ</option></select
+        ><br />
+
+        <label for="R2">R2:</label>
+        <input type="number" id="R2" step="any" required size="15" />
+        <select id="unitR2">
+          <option value="Ω">Ω</option>
+          <option value="kΩ">kΩ</option>
+          <option value="MΩ">MΩ</option></select
+        ><br />
+
+        <label for="RsDivisor">Rs:</label>
+        <input type="number" id="RsDivisor" step="any" required size="15" />
+        <select id="unitRsDivisor">
+          <option value="Ω">Ω</option>
+          <option value="kΩ">kΩ</option>
+          <option value="MΩ">MΩ</option></select
+        ><br />
+
+        <label for="IDSSDivisor">IDSS:</label>
+        <input type="number" id="IDSSDivisor" step="any" required size="15" />
+        <select id="unitIDSSDivisor">
+          <option value="mA">mA</option>
+          <option value="uA">μA</option></select
+        ><br />
+
+        <label for="VpDivisor">Vp:</label>
+        <input type="number" id="VpDivisor" step="any" required size="15" />
+        <select id="unitVpDivisor">
+          <option value="V">V</option></select
+        ><br />
+        <p>
+          <strong>Nota:</strong> El divisor de voltaje se calculará en R2, que
+          está en paralelo a la compuerta del FET.
+        </p>
+        <button type="button" onclick="calculateDivisorVoltaje()">
+          Calcular
+        </button>
+      </form>
+    </div>
+
+    <h2>Resultado</h2>
+    <div id="result"></div>
+
+    <div id="chartContainer">
+      <canvas id="fetChart"></canvas>
+    </div>
+
+    <script>
+      let chart = null;
+
+      function showConfiguration() {
+        const configurationType =
+          document.getElementById("configurationType").value;
+        document.getElementById("autopolarizacionForm").classList.add("hidden");
+        document.getElementById("divisorVoltajeForm").classList.add("hidden");
+        document.getElementById("result").innerHTML = "";
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
+
+        if (configurationType === "autopolarizacion") {
+          document
+            .getElementById("autopolarizacionForm")
+            .classList.remove("hidden");
+        } else if (configurationType === "divisorVoltaje") {
+          document
+            .getElementById("divisorVoltajeForm")
+            .classList.remove("hidden");
+        }
+      }
+
+      function calculateIntersection() {
+        const IDSS = parseFloat(document.getElementById("IDSS").value);
+        const unitIDSS = document.getElementById("unitIDSS").value;
+        const Vp = parseFloat(document.getElementById("Vp").value);
+        const Rs = parseFloat(document.getElementById("Rs").value);
+        const unitRs = document.getElementById("unitRs").value;
+
+        if (isNaN(IDSS) || IDSS < 0) {
+          document.getElementById("result").innerHTML =
+            "IDSS solo puede adoptar valores positivos. Intenta de nuevo :)";
+          return;
+        }
+
+        if (isNaN(Vp) || Vp > 0) {
+          document.getElementById("result").innerHTML =
+            "Vp solo admite valores negativos. Intenta otra vez :)";
+          return;
+        }
+
+        if (isNaN(Rs) || Rs < 0) {
+          document.getElementById("result").innerHTML =
+            "Rs solo adopta valores positivos. Intenta otra vez :)";
+          return;
+        }
+
+        // Ajustar Rs según la unidad seleccionada
+        let RsAdjusted = adjustResistance(Rs, unitRs);
+
+        const y = unitIDSS === "mA" ? 1e-3 : 1e-6; // Convertir y a amperios si es necesario
+        const x = -y * RsAdjusted;
+
+        const m = 1 / x;
+
+        const a = IDSS / Math.pow(Vp, 2);
+        const b = -((2 * IDSS) / Vp + m);
+        const c = IDSS;
+
+        const discriminant = Math.pow(b, 2) - 4 * a * c;
+
+        if (discriminant < 0) {
+          document.getElementById("result").textContent =
+            "No hay soluciones reales.";
+          return;
+        }
+
+        const VGSQ1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+        const VGSQ2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+
+        let resultText = "";
+        const unitLabel = unitIDSS === "mA" ? "mA" : "μA";
+        let VGSQ;
+
+        if (VGSQ1 > Vp) {
+          const IDQ1 = m * VGSQ1;
+          resultText += `<div class="result-box">VGSQ: ${VGSQ1.toFixed(
+            2
+          )} V<br>IDQ: ${IDQ1.toFixed(2)} ${unitLabel}</div>`;
+          VGSQ = VGSQ1;
+        }
+
+        if (VGSQ2 > Vp) {
+          const IDQ2 = m * VGSQ2;
+          resultText += `<div class="result-box">VGSQ: ${VGSQ2.toFixed(
+            2
+          )} V<br>IDQ: ${IDQ2.toFixed(2)} ${unitLabel}</div>`;
+          if (!VGSQ) VGSQ = VGSQ2; // Si VGSQ1 no era válido, usamos VGSQ2
+        }
+
+        if (resultText === "") {
+          resultText = "No hay soluciones donde VGSQ > Vp.";
+          VGSQ = null;
+        }
+
+        document.getElementById("result").innerHTML = resultText;
+
+        // Create or update chart
+        createOrUpdateChart(
+          "autopolarizacion",
+          IDSS,
+          Vp,
+          RsAdjusted,
+          unitIDSS,
+          null,
+          VGSQ
+        );
+      }
+
+      function calculateDivisorVoltaje() {
+        const VDD = parseFloat(document.getElementById("VDD").value);
+        const R1 = parseFloat(document.getElementById("R1").value);
+        const R2 = parseFloat(document.getElementById("R2").value);
+        const Rs = parseFloat(document.getElementById("RsDivisor").value);
+        const IDSS = parseFloat(document.getElementById("IDSSDivisor").value);
+        const Vp = parseFloat(document.getElementById("VpDivisor").value);
+
+        const unitR1 = document.getElementById("unitR1").value;
+        const unitR2 = document.getElementById("unitR2").value;
+        const unitRs = document.getElementById("unitRsDivisor").value;
+        const unitIDSS = document.getElementById("unitIDSSDivisor").value;
+
+        // Verificar que las resistencias sean positivas
+        if (R1 <= 0 ||isNaN(R1) ||R2 <= 0 || isNaN(R2)|| Rs <= 0 || isNaN(Rs)) {
+          document.getElementById("result").innerHTML =
+            "Los valores de las resistencias deben ser positivos. Por favor, verifica tus entradas.";
+          return;
+        }
+
+        // Verificar que IDSS sea positivo
+        if (IDSS <= 0 ||isNaN(IDSS)) {
+          document.getElementById("result").innerHTML =
+            "El valor de IDSS debe ser positivo. Por favor, verifica tu entrada.";
+          return;
+        }
+
+        // Verificar que Vp sea negativo
+        if (Vp >= 0 ||isNaN(Vp)) {
+          document.getElementById("result").innerHTML =
+            "El valor de Vp debe ser negativo. Por favor, verifica tu entrada.";
+          return;
+        }
+        // Ajustar resistencias según la unidad seleccionada
+        const R1Adjusted = adjustResistance(R1, unitR1);
+        const R2Adjusted = adjustResistance(R2, unitR2);
+        const RsAdjusted = adjustResistance(Rs, unitRs);
+
+        // Calcular VG
+        const VG = (R2Adjusted * VDD) / (R1Adjusted + R2Adjusted);
+
+        // Convertir IDSS a amperios
+        const IDSSAmp = unitIDSS === "mA" ? IDSS / 1000 : IDSS / 1000000;
+
+        // Función para resolver la ecuación VGS = VG - ID * RS igualada a la ecuación de Shockley
+        function solveEquation(VGS) {
+          const ID = IDSSAmp * Math.pow(1 - VGS / Vp, 2);
+          return VGS - (VG - ID * RsAdjusted);
+        }
+
+        // Método de Newton-Raphson para encontrar VGS
+        let VGSQ = VG; // Valor inicial
+        const maxIterations = 1000;
+        const tolerance = 1e-6;
+        let iteration = 0;
+
+        while (iteration < maxIterations) {
+          const f = solveEquation(VGSQ);
+          // Derivada numérica
+          const h = 1e-6;
+          const df = (solveEquation(VGSQ + h) - f) / h;
+
+          const deltaVGS = f / df;
+          VGSQ -= deltaVGS;
+
+          if (Math.abs(deltaVGS) < tolerance) {
+            break;
+          }
+          iteration++;
+        }
+
+        // Calcular IDQ
+        const IDQ = IDSSAmp * Math.pow(1 - VGSQ / Vp, 2);
+
+        // Mostrar resultado
+        let resultText = "";
+        const unitLabel = unitIDSS;
+        const IDQDisplay = unitIDSS === "mA" ? IDQ * 1000 : IDQ * 1000000;
+        resultText = `
+                <div class="result-box">
+                    VGSQ: ${VGSQ.toFixed(2)} V<br>
+                    IDQ: ${IDQDisplay.toFixed(2)} ${unitLabel}
+                </div>`;
+
+        document.getElementById("result").innerHTML = resultText;
+
+        // Create or update chart
+        createOrUpdateChart(
+          "divisorVoltaje",
+          IDSS,
+          Vp,
+          RsAdjusted,
+          unitIDSS,
+          VG,
+          VGSQ
+        );
+      }
+
+      function adjustResistance(value, unit) {
+        switch (unit) {
+          case "kΩ":
+            return value * 1000;
+          case "MΩ":
+            return value * 1000000;
+          default:
+            return value;
+        }
+      }
+
+      function createOrUpdateChart(
+        config,
+        IDSS,
+        Vp,
+        Rs,
+        unitIDSS,
+        VG = null,
+        VGSQ = null
+      ) {
+        const ctx = document.getElementById("fetChart").getContext("2d");
+
+        const yLabel = unitIDSS === "mA" ? "ID (mA)" : "ID (µA)";
+        const yMultiplier = unitIDSS === "mA" ? 1 : 1000;
+
+        // Determinar el rango de VGS
+        let vgsMin = Math.min(Vp, VGSQ || 0);
+        let vgsMax = Math.max(0, VG || 0);
+
+        if (VGSQ > 0) {
+          vgsMax = Math.max(vgsMax, VGSQ);
+        } else {
+          // Extender vgsMin para la recta de carga
+          vgsMin = Math.min(vgsMin, VG - (VG / Rs) * Rs);
+        }
+
+        // Generar puntos para la curva de Shockley
+        const vgsValues = Array.from(
+          { length: 201 },
+          (_, i) => vgsMin + (vgsMax - vgsMin) * (i / 200)
+        );
+        const idValues = vgsValues.map((vgs) => {
+          if (vgs <= Vp) return 0;
+          return IDSS * Math.pow(1 - vgs / Vp, 2) * yMultiplier;
+        });
+
+        // Graficar la recta de carga
+        let loadLineData;
+        let IDQ;
+        if (config === "autopolarizacion") {
+          loadLineData = [
+            { x: 0, y: 0 },
+            { x: (-IDSS * Rs * yMultiplier) / 1000, y: IDSS * yMultiplier },
+          ];
+        } else {
+          // Para divisor de voltaje, extender la recta de carga hasta VGS=Vp
+          loadLineData = [
+            { x: VG, y: 0 },
+            { x: Vp, y: ((VG - Vp) / Rs) * Math.pow(10, 3) },
+          ];
+        }
+
+        if (VGSQ) {
+          IDQ = IDSS * Math.pow(1 - VGSQ / Vp, 2) * yMultiplier;
+        }
+
+        if (chart) {
+          chart.destroy();
+        }
+
+        const yMax = Math.max(
+          ...idValues,
+          ...loadLineData.map((point) => point.y)
+        );
+
+        chart = new Chart(ctx, {
+          type: "scatter",
+          data: {
+            datasets: [
+              {
+                label: "Punto Q",
+                data: VGSQ ? [{ x: VGSQ, y: IDQ }] : [],
+                backgroundColor: "green",
+                pointRadius: 7,
+              },
+              {
+                label: "Curva de transferencia",
+                data: vgsValues.map((vgs, index) => ({
+                  x: vgs,
+                  y: idValues[index],
+                })),
+                borderColor: "blue",
+                backgroundColor: "rgba(0, 0, 255, 0.1)",
+                showLine: true,
+                pointRadius: 0,
+              },
+              {
+                label: "Recta de carga",
+                data: loadLineData,
+                borderColor: "orange",
+                backgroundColor: "rgba(255, 165, 0, 0.1)",
+                showLine: true,
+                pointRadius: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: "linear",
+                position: "bottom",
+                title: {
+                  display: true,
+                  text: "VGS (V)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value.toFixed(1);
+                  },
+                },
+                min: vgsMin,
+                max: vgsMax,
+                grid: {
+                  drawBorder: true,
+                  color: function (context) {
+                    if (context.tick.value === 0) {
+                      return "rgba(0, 0, 0, 1)"; // Línea negra en VGS = 0
+                    }
+                    return "rgba(0, 0, 0, 0.1)"; // Otras líneas más tenues
+                  },
+                  lineWidth: function (context) {
+                    if (context.tick.value === 0) {
+                      return 1; // Línea más gruesa en VGS = 0
+                    }
+                    return 1; // Otras líneas más delgadas
+                  },
+                },
+              },
+              y: {
+                type: "linear",
+                position: "right",
+                title: {
+                  display: true,
+                  text: yLabel,
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value.toFixed(1);
+                  },
+                },
+                min: 0,
+                max: yMax,
+                grid: {
+                  lineWidth: function (context) {
+                    return context.tick.value === 0 ? 1 : 1; // Grosor para y=0 más grueso
+                  },
+                  color: function (context) {
+                    return context.tick.value === 0
+                      ? "black"
+                      : "rgba(0, 0, 0, 0.1)"; // Color negro para y=0
+                  },
+                },
+              },
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.dataset.label || "";
+                    if (label) {
+                      label += ": ";
+                    }
+                    label += `(${context.parsed.x.toFixed(
+                      2
+                    )}, ${context.parsed.y.toFixed(2)})`;
+                    return label;
+                  },
+                },
+              },
+              legend: {
+                labels: {
+                  usePointStyle: true,
+                  pointStyle: "circle",
+                },
+              },
+            },
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
