@@ -1,0 +1,442 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FET: Calculadora del Punto Q</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #CECECE;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 160 80'%3E%3Cg fill='%23C7C7C7' %3E%3Cpolygon points='0 10 0 0 10 0'/%3E%3Cpolygon points='0 40 0 30 10 30'/%3E%3Cpolygon points='0 30 0 20 10 20'/%3E%3Cpolygon points='0 70 0 60 10 60'/%3E%3Cpolygon points='0 80 0 70 10 70'/%3E%3Cpolygon points='50 80 50 70 60 70'/%3E%3Cpolygon points='10 20 10 10 20 10'/%3E%3Cpolygon points='10 40 10 30 20 30'/%3E%3Cpolygon points='20 10 20 0 30 0'/%3E%3Cpolygon points='10 10 10 0 20 0'/%3E%3Cpolygon points='30 20 30 10 40 10'/%3E%3Cpolygon points='20 20 20 40 40 20'/%3E%3Cpolygon points='40 10 40 0 50 0'/%3E%3Cpolygon points='40 20 40 10 50 10'/%3E%3Cpolygon points='40 40 40 30 50 30'/%3E%3Cpolygon points='30 40 30 30 40 30'/%3E%3Cpolygon points='40 60 40 50 50 50'/%3E%3Cpolygon points='50 30 50 20 60 20'/%3E%3Cpolygon points='40 60 40 80 60 60'/%3E%3Cpolygon points='50 40 50 60 70 40'/%3E%3Cpolygon points='60 0 60 20 80 0'/%3E%3Cpolygon points='70 30 70 20 80 20'/%3E%3Cpolygon points='70 40 70 30 80 30'/%3E%3Cpolygon points='60 60 60 80 80 60'/%3E%3Cpolygon points='80 10 80 0 90 0'/%3E%3Cpolygon points='70 40 70 60 90 40'/%3E%3Cpolygon points='80 60 80 50 90 50'/%3E%3Cpolygon points='60 30 60 20 70 20'/%3E%3Cpolygon points='80 70 80 80 90 80 100 70'/%3E%3Cpolygon points='80 10 80 40 110 10'/%3E%3Cpolygon points='110 40 110 30 120 30'/%3E%3Cpolygon points='90 40 90 70 120 40'/%3E%3Cpolygon points='10 50 10 80 40 50'/%3E%3Cpolygon points='110 60 110 50 120 50'/%3E%3Cpolygon points='100 60 100 80 120 60'/%3E%3Cpolygon points='110 0 110 20 130 0'/%3E%3Cpolygon points='120 30 120 20 130 20'/%3E%3Cpolygon points='130 10 130 0 140 0'/%3E%3Cpolygon points='130 30 130 20 140 20'/%3E%3Cpolygon points='120 40 120 30 130 30'/%3E%3Cpolygon points='130 50 130 40 140 40'/%3E%3Cpolygon points='120 50 120 70 140 50'/%3E%3Cpolygon points='110 70 110 80 130 80 140 70'/%3E%3Cpolygon points='140 10 140 0 150 0'/%3E%3Cpolygon points='140 20 140 10 150 10'/%3E%3Cpolygon points='140 40 140 30 150 30'/%3E%3Cpolygon points='140 50 140 40 150 40'/%3E%3Cpolygon points='140 70 140 60 150 60'/%3E%3Cpolygon points='150 20 150 40 160 30 160 20'/%3E%3Cpolygon points='150 60 150 50 160 50'/%3E%3Cpolygon points='140 70 140 80 150 80 160 70'/%3E%3C/g%3E%3C/svg%3E");}
+    .titulo-container {border-radius: 8px; padding: 20px; background: #e9ffeb; margin: 20px 0}
+    .result-box {display: inline-block; background: #e0f7fa; padding: 10px; margin: 5px 0; border-radius: 5px}
+    .hidden {display: none}
+    form {margin-top: 20px; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background-color: #ffffff99;}
+    label {display: block; margin-top: 10px; font-weight: bold; padding-bottom: 3px;}
+    input[type="number"], select {margin-bottom: 10px}
+    button {background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px}
+    button:hover {background: #0056b3}
+    #configurationType {width: 100%; margin-top: 10px; padding: 8px; font-size: 16px; box-sizing: border-box}
+    #chartContainer {width: 100%; height: 400px; margin-top: 20px}
+  </style>
+</head>
+<body>
+  <div class="titulo-container">
+    <h1>Calculadora del punto Q de un transistor FET</h1>
+    <h2>Cálculo de intersección entre la curva de transferencia y recta de carga</h2>
+    <h4>Created by <a href="https://www.instagram.com/axel.medina07" style="color:#ff7400"">Axel Medina</a></h4>
+    <h5><a href="https://github.com/axel-medina/transistor-FET" style="color:#000">Estás usando la última versión</a> v4.0</h5>
+  </div>
+
+  <label for="configurationType" style="display:inline-block;width:auto">Selecciona el tipo de polarización:</label>
+  <select id="configurationType" onchange="showConfiguration()">
+    <option value="">Selecciona una opción</option>
+    <option value="polarizacionFija">Polarización fija</option>
+    <option value="autopolarizacion1">Autopolarización (JFET y MOSFET decremental)</option>
+    <option value="divisorVoltaje1">Divisor de voltaje (JFET y MOSFET decremental)</option>
+    <option value="autopolarizacionMOSIncremental">Autopolarización (MOSFET incremental y MESFET)</option>
+    <option value="divisorVoltajeMOSIncremental">Divisor de voltaje (MOSFET incremental y MESFET)</option>
+  </select>
+
+  <!-- Modo: Polarización fija -->
+  <div id="polarizacionFijaForm" class="hidden">
+    <h3>Polarización fija</h3>
+    <form id="inputFormFija">
+      <label for="VGG">VGG</label>
+      <input type="number" id="VGG" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGG"><option value="V">V</option></select><br>
+      <label for="IDSSFija">IDSS</label>
+      <input type="number" id="IDSSFija" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDSSFija"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VpFija">Vp</label>
+      <input type="number" id="VpFija" step="any" required size="15" placeholder="Valor negativo">
+      <select id="unitVpFija"><option value="V">V</option></select><br>
+      <button type="button" onclick="calculatePolarizacionFija()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Autopolarización (JFET/MOSFET decremental) -->
+  <div id="autopolarizacion1Form" class="hidden">
+    <h3>Autopolarización</h3>
+    <form id="inputFormAuto">
+      <label for="IDSS">IDSS</label>
+      <input type="number" id="IDSS" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDSS"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="Vp">Vp</label>
+      <input type="number" id="Vp" step="any" required size="15" placeholder="Valor negativo">
+      <select id="unitVp"><option value="V">V</option></select><br>
+      <label for="Rs">Rs</label>
+      <input type="number" id="Rs" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRs"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <button type="button" onclick="calculateIntersection()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Divisor de voltaje (JFET/MOSFET decremental) -->
+  <div id="divisorVoltaje1Form" class="hidden">
+    <h3>Divisor de voltaje</h3>
+    <form id="inputFormDivisor">
+      <label for="VDD">VDD</label>
+      <input type="number" id="VDD" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVDD"><option value="V">V</option></select><br>
+      <label for="R1">R1</label>
+      <input type="number" id="R1" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR1"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="R2">R2</label>
+      <input type="number" id="R2" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR2"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="RsDivisor">Rs</label>
+      <input type="number" id="RsDivisor" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRsDivisor"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="IDSSDivisor">IDSS</label>
+      <input type="number" id="IDSSDivisor" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDSSDivisor"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VpDivisor">Vp</label>
+      <input type="number" id="VpDivisor" step="any" required size="15" placeholder="Valor negativo">
+      <select id="unitVpDivisor"><option value="V">V</option></select><br>
+      <p><strong>Nota:</strong> El divisor se calcula en R2, en paralelo a la compuerta.</p>
+      <button type="button" onclick="calculateDivisorVoltaje()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Autopolarización (MOSFET incremental) -->
+  <div id="autopolarizacionMOSIncrementalForm" class="hidden">
+    <h3>Autopolarización (MOSFET incremental)</h3>
+    <form id="inputFormMOS">
+      <label for="VDD_MOS">VDD</label>
+      <input type="number" id="VDD_MOS" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVDD_MOS"><option value="V">V</option></select><br>
+      <label for="IDON">ID(ON)</label>
+      <input type="number" id="IDON" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDON"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VGS_ON">VGS(ON)</label>
+      <input type="number" id="VGS_ON" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_ON"><option value="V">V</option></select><br>
+      <label for="VGS_TH">VGS(TH)</label>
+      <input type="number" id="VGS_TH" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_TH"><option value="V">V</option></select><br>
+      <label for="RD">RD</label>
+      <input type="number" id="RD" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRD"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <button type="button" onclick="calculateAutopolarizacionMOSIncremental()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Divisor de voltaje (MOSFET incremental) -->
+  <div id="divisorVoltajeMOSIncrementalForm" class="hidden">
+    <h3>Divisor de voltaje (MOSFET incremental)</h3>
+    <form id="inputFormMOSDiv">
+      <label for="VDD_MOSDIV">VDD</label>
+      <input type="number" id="VDD_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVDD_MOSDIV"><option value="V">V</option></select><br>
+      <label for="R1_MOSDIV">R1</label>
+      <input type="number" id="R1_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR1_MOSDIV"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="R2_MOSDIV">R2</label>
+      <input type="number" id="R2_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR2_MOSDIV"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="RS_MOSDIV">RS</label>
+      <input type="number" id="RS_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRS_MOSDIV"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="IDON_MOSDIV">ID(ON)</label>
+      <input type="number" id="IDON_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDON_MOSDIV"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VGS_ON_MOSDIV">VGS(ON)</label>
+      <input type="number" id="VGS_ON_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_ON_MOSDIV"><option value="V">V</option></select><br>
+      <label for="VGS_TH_MOSDIV">VGS(TH)</label>
+      <input type="number" id="VGS_TH_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_TH_MOSDIV"><option value="V">V</option></select><br>
+      <p><strong>Nota:</strong> El divisor se calcula en R2, en paralelo a la compuerta.</p>
+      <button type="button" onclick="calculateDivisorVoltajeMOSIncremental()">Calcular</button>
+    </form>
+  </div>
+
+  <h2>Resultado</h2>
+  <div id="result"></div>
+  <div id="chartContainer">
+    <canvas id="fetChart"></canvas>
+  </div>
+
+  <script>
+    let chart = null;
+    function showConfiguration() {
+      ["polarizacionFijaForm","autopolarizacion1Form","divisorVoltaje1Form","autopolarizacionMOSIncrementalForm","divisorVoltajeMOSIncrementalForm"]
+        .forEach(id => document.getElementById(id).classList.add("hidden"));
+      document.getElementById("result").innerHTML = "";
+      if(chart){ chart.destroy(); chart = null; }
+      const type = document.getElementById("configurationType").value;
+      if(type) document.getElementById(type+"Form").classList.remove("hidden");
+    }
+    function adjustResistance(val, unit) {
+      return unit==="kΩ" ? val*1000 : unit==="MΩ" ? val*1000000 : val;
+    }
+    // --- Modos ya existentes ---
+    function calculatePolarizacionFija() {
+      const VGG = parseFloat(document.getElementById("VGG").value),
+            IDSS = parseFloat(document.getElementById("IDSSFija").value),
+            Vp = parseFloat(document.getElementById("VpFija").value),
+            unitIDSS = document.getElementById("unitIDSSFija").value;
+      if(isNaN(VGG) || VGG <= 0){ document.getElementById("result").innerHTML = "VGG debe ser positivo."; return; }
+      if(isNaN(IDSS) || IDSS <= 0){ document.getElementById("result").innerHTML = "IDSS debe ser positivo."; return; }
+      if(isNaN(Vp) || Vp >= 0){ document.getElementById("result").innerHTML = "Vp debe ser negativo."; return; }
+      const VGSQ = -VGG,
+            IDSSAmp = unitIDSS==="mA" ? IDSS/1000 : IDSS/1000000,
+            IDQ = IDSSAmp * Math.pow(1 - VGSQ/Vp, 2),
+            IDQDisplay = unitIDSS==="mA" ? IDQ*1000 : IDQ*1000000;
+      document.getElementById("result").innerHTML = `<div class="result-box">VGSQ: ${VGSQ.toFixed(2)} V<br>IDQ: ${IDQDisplay.toFixed(2)} ${unitIDSS}</div>`;
+      createOrUpdateChart("polarizacionFija", IDSS, Vp, unitIDSS, null, null, VGSQ);
+    }
+    function calculateIntersection() {
+      const IDSS = parseFloat(document.getElementById("IDSS").value),
+            unitIDSS = document.getElementById("unitIDSS").value,
+            Vp = parseFloat(document.getElementById("Vp").value),
+            Rs = parseFloat(document.getElementById("Rs").value),
+            unitRs = document.getElementById("unitRs").value;
+      if(isNaN(IDSS) || IDSS < 0){ document.getElementById("result").innerHTML = "IDSS debe ser positivo."; return; }
+      if(isNaN(Vp) || Vp > 0){ document.getElementById("result").innerHTML = "Vp debe ser negativo."; return; }
+      if(isNaN(Rs) || Rs < 0){ document.getElementById("result").innerHTML = "Rs debe ser positivo."; return; }
+      let RsAdjusted = adjustResistance(Rs, unitRs),
+          y = unitIDSS==="mA" ? 1e-3 : 1e-6,
+          x = -y * RsAdjusted,
+          m = 1 / x,
+          a = IDSS / Math.pow(Vp, 2),
+          b = -((2*IDSS)/Vp + m),
+          c = IDSS,
+          disc = Math.pow(b, 2) - 4*a*c;
+      if(disc < 0){ document.getElementById("result").textContent = "No hay solución real."; return; }
+      const sol1 = (-b + Math.sqrt(disc))/(2*a),
+            sol2 = (-b - Math.sqrt(disc))/(2*a);
+      let res = "", VGSQ;
+      if(sol1 > Vp){ let IDQ1 = m * sol1; res += `<div class="result-box">VGSQ: ${sol1.toFixed(2)} V<br>IDQ: ${IDQ1.toFixed(2)} ${unitIDSS}</div>`; VGSQ = sol1; }
+      if(sol2 > Vp){ let IDQ2 = m * sol2; res += `<div class="result-box">VGSQ: ${sol2.toFixed(2)} V<br>IDQ: ${IDQ2.toFixed(2)} ${unitIDSS}</div>`; if(!VGSQ) VGSQ = sol2; }
+      if(!res){ res = "No hay soluciones donde VGSQ > Vp."; VGSQ = null; }
+      document.getElementById("result").innerHTML = res;
+      createOrUpdateChart("autopolarizacion1", IDSS, Vp, unitIDSS, RsAdjusted, null, VGSQ);
+    }
+    function calculateDivisorVoltaje() {
+      const VDD = parseFloat(document.getElementById("VDD").value),
+            R1 = parseFloat(document.getElementById("R1").value),
+            R2 = parseFloat(document.getElementById("R2").value),
+            Rs = parseFloat(document.getElementById("RsDivisor").value),
+            IDSS = parseFloat(document.getElementById("IDSSDivisor").value),
+            Vp = parseFloat(document.getElementById("VpDivisor").value),
+            unitR1 = document.getElementById("unitR1").value,
+            unitR2 = document.getElementById("unitR2").value,
+            unitRs = document.getElementById("unitRsDivisor").value,
+            unitIDSS = document.getElementById("unitIDSSDivisor").value;
+      if(R1<=0 || isNaN(R1) || R2<=0 || isNaN(R2) || Rs<=0 || isNaN(Rs)){
+        document.getElementById("result").innerHTML = "R1, R2 y Rs deben ser positivos."; return;
+      }
+      if(IDSS<=0 || isNaN(IDSS)){
+        document.getElementById("result").innerHTML = "IDSS debe ser positivo."; return;
+      }
+      if(Vp>=0 || isNaN(Vp)){
+        document.getElementById("result").innerHTML = "Vp debe ser negativo."; return;
+      }
+      const R1A = adjustResistance(R1, unitR1),
+            R2A = adjustResistance(R2, unitR2),
+            RsA = adjustResistance(Rs, unitRs),
+            VG = (R2A * VDD) / (R1A + R2A),
+            IDSSAmp = unitIDSS==="mA" ? IDSS/1000 : IDSS/1000000;
+      function f(VGS) { return VGS - (VG - IDSSAmp * Math.pow(1 - VGS/Vp, 2) * RsA); }
+      let VGSQ = VG, maxIt = 1000, tol = 1e-6, it = 0;
+      while(it < maxIt){
+        let f0 = f(VGSQ), df = (f(VGSQ+1e-6)-f0)/1e-6;
+        let delta = f0/df; VGSQ -= delta;
+        if(Math.abs(delta) < tol) break; it++;
+      }
+      const IDQ = IDSSAmp * Math.pow(1 - VGSQ/Vp, 2),
+            IDQDisplay = unitIDSS==="mA" ? IDQ*1000 : IDQ*1000000;
+      document.getElementById("result").innerHTML = `<div class="result-box">VGSQ: ${VGSQ.toFixed(2)} V<br>IDQ: ${IDQDisplay.toFixed(2)} ${unitIDSS}</div>`;
+      createOrUpdateChart("divisorVoltaje1", IDSS, Vp, unitIDSS, RsA, VG, VGSQ);
+    }
+    function calculateAutopolarizacionMOSIncremental() {
+      const VDD = parseFloat(document.getElementById("VDD_MOS").value),
+            IDON = parseFloat(document.getElementById("IDON").value),
+            VGS_ON = parseFloat(document.getElementById("VGS_ON").value),
+            VGS_TH = parseFloat(document.getElementById("VGS_TH").value),
+            RD = parseFloat(document.getElementById("RD").value),
+            unitIDON = document.getElementById("unitIDON").value;
+      if(isNaN(VDD) || VDD <= 0){ document.getElementById("result").innerHTML = "VDD debe ser positivo."; return; }
+      if(isNaN(IDON) || IDON <= 0){ document.getElementById("result").innerHTML = "ID(ON) debe ser positivo."; return; }
+      if(isNaN(VGS_ON) || VGS_ON <= 0){ document.getElementById("result").innerHTML = "VGS(ON) debe ser positivo."; return; }
+      if(isNaN(VGS_TH) || VGS_TH <= 0){ document.getElementById("result").innerHTML = "VGS(TH) debe ser positivo."; return; }
+      if(VGS_ON <= VGS_TH){ document.getElementById("result").innerHTML = "VGS(ON) debe ser mayor que VGS(TH)."; return; }
+      if(isNaN(RD) || RD <= 0){ document.getElementById("result").innerHTML = "RD debe ser positivo."; return; }
+      let RDAdjusted = adjustResistance(RD, document.getElementById("unitRD").value);
+      const IDONAmp = unitIDON==="mA" ? IDON/1000 : IDON/1000000;
+      const K = IDONAmp / Math.pow(VGS_ON - VGS_TH, 2);
+      function f(ID) { return ID - K * Math.pow(VDD - RDAdjusted*ID - VGS_TH, 2); }
+      function df(ID) { return 1 + 2*K*RDAdjusted*(VDD - RDAdjusted*ID - VGS_TH); }
+      let ID = (VDD - VGS_TH)/(2*RDAdjusted), maxIt = 1000, tol = 1e-6, it = 0;
+      while(it < maxIt){
+        let delta = f(ID)/df(ID);
+        ID -= delta;
+        if(Math.abs(delta) < tol) break; it++;
+      }
+      const VGSQ = VDD - RDAdjusted*ID;
+      if(VGSQ <= VGS_TH){ document.getElementById("result").innerHTML = "La solución encontrada no cumple: VGS > VGS(TH)."; return; }
+      const IDQDisplay = unitIDON==="mA" ? ID*1000 : ID*1000000;
+      document.getElementById("result").innerHTML = `<div class="result-box">VGSQ: ${VGSQ.toFixed(2)} V<br>IDQ: ${IDQDisplay.toFixed(2)} ${unitIDON}</div>`;
+      createOrUpdateChart("autopolarizacionMOSIncremental", K, RDAdjusted, unitIDON, VDD, VGS_TH, VGSQ, ID);
+    }
+    // --- Nuevo modo: Divisor de voltaje (MOSFET incremental) ---
+    function calculateDivisorVoltajeMOSIncremental() {
+      const VDD = parseFloat(document.getElementById("VDD_MOSDIV").value),
+            R1 = parseFloat(document.getElementById("R1_MOSDIV").value),
+            R2 = parseFloat(document.getElementById("R2_MOSDIV").value),
+            RS = parseFloat(document.getElementById("RS_MOSDIV").value),
+            IDON = parseFloat(document.getElementById("IDON_MOSDIV").value),
+            VGS_ON = parseFloat(document.getElementById("VGS_ON_MOSDIV").value),
+            VGS_TH = parseFloat(document.getElementById("VGS_TH_MOSDIV").value),
+            unitIDON = document.getElementById("unitIDON_MOSDIV").value,
+            unitR1 = document.getElementById("unitR1_MOSDIV").value,
+            unitR2 = document.getElementById("unitR2_MOSDIV").value,
+            unitRS = document.getElementById("unitRS_MOSDIV").value;
+      if(isNaN(VDD) || VDD <= 0){ document.getElementById("result").innerHTML = "VDD debe ser positivo."; return; }
+      if(isNaN(R1) || R1 <= 0 || isNaN(R2) || R2 <= 0 || isNaN(RS) || RS <= 0){
+        document.getElementById("result").innerHTML = "R1, R2 y RS deben ser positivos."; return;
+      }
+      if(isNaN(IDON) || IDON <= 0){ document.getElementById("result").innerHTML = "ID(ON) debe ser positivo."; return; }
+      if(isNaN(VGS_ON) || VGS_ON <= 0 || isNaN(VGS_TH) || VGS_TH <= 0){
+        document.getElementById("result").innerHTML = "VGS(ON) y VGS(TH) deben ser positivos."; return;
+      }
+      if(VGS_ON <= VGS_TH){ document.getElementById("result").innerHTML = "VGS(ON) debe ser mayor que VGS(TH)."; return; }
+      let R1A = adjustResistance(R1, unitR1),
+          R2A = adjustResistance(R2, unitR2),
+          RSA = adjustResistance(RS, unitRS);
+      const VG = VDD * R2A / (R1A + R2A);
+      const IDONAmp = unitIDON==="mA" ? IDON/1000 : IDON/1000000;
+      const K = IDONAmp / Math.pow(VGS_ON - VGS_TH, 2);
+      function f(I) { return I - K * Math.pow(VG - RSA*I - VGS_TH, 2); }
+      function df(I) { return 1 + 2*K*RSA*(VG - RSA*I - VGS_TH); }
+      let I = (VG - VGS_TH)/(2*RSA), maxIt = 1000, tol = 1e-6, it = 0;
+      while(it < maxIt){
+        let delta = f(I)/df(I);
+        I -= delta;
+        if(Math.abs(delta) < tol) break; it++;
+      }
+      const VGSQ = VG - RSA*I;
+      if(VGSQ <= VGS_TH){ document.getElementById("result").innerHTML = "La solución encontrada no cumple: VGS > VGS(TH)."; return; }
+      const IDQDisplay = unitIDON==="mA" ? I*1000 : I*1000000;
+      document.getElementById("result").innerHTML = `<div class="result-box">VGSQ: ${VGSQ.toFixed(2)} V<br>IDQ: ${IDQDisplay.toFixed(2)} ${unitIDON}</div>`;
+      createOrUpdateChart("divisorVoltajeMOSIncremental", K, RSA, unitIDON, VG, VGS_TH, VGSQ, I);
+    }
+    // --- Función de graficación ---
+    function createOrUpdateChart(cfg, p1, p2, p3, p4, p5, p6, p7) {
+      // Modo: Autopolarización (MOSFET incremental)
+      if(cfg==="autopolarizacionMOSIncremental") {
+        // p1 = K, p2 = RD, p3 = unitIDON, p4 = VDD, p5 = VGS_TH, p6 = VGSQ, p7 = ID (en A)
+        const K = p1, RD_val = p2, unit = p3, VDD = p4, VGS_TH = p5, VGSQ = p6, IDQ = p7,
+              ctx = document.getElementById("fetChart").getContext("2d"),
+              yLabel = unit==="mA" ? "ID (mA)" : "ID (µA)",
+              convFactor = unit==="mA" ? 1000 : 1000000,
+              vgsMin = VGS_TH, vgsMax = VDD,
+              vgsValues = Array.from({length:201}, (_,i)=> vgsMin + (vgsMax-vgsMin)*(i/200)),
+              idValues = vgsValues.map(vgs => vgs < VGS_TH ? 0 : K*Math.pow(vgs-VGS_TH,2)*convFactor),
+              loadLineData = [{x: VDD, y: 0}, {x: VGS_TH, y: (VDD-VGS_TH)/(RD_val)*convFactor}],
+              Qpoint = {x: VGSQ, y: IDQ*convFactor},
+              yMax = Math.max(...idValues, loadLineData[1].y, Qpoint.y);
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, {
+          type: "scatter",
+          data: {
+            datasets: [
+              { label: "Punto Q", data: [Qpoint], backgroundColor: "green", pointRadius: 7 },
+              { label: "Curva de transferencia", data: vgsValues.map((v,i)=>({x: v, y: idValues[i]})), borderColor: "blue", backgroundColor: "rgba(0,0,255,0.1)", showLine: true, pointRadius: 0 },
+              { label: "Recta de carga", data: loadLineData, borderColor: "orange", backgroundColor: "rgba(255,165,0,0.1)", showLine: true, pointRadius: 0 }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { type: "linear", position: "bottom", title: {display: true, text: "VGS (V)"}, min: vgsMin, max: vgsMax, ticks: {callback: v=>v.toFixed(1)}, grid: { drawBorder: true, color: ctx=> ctx.tick.value===0 ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.1)" } },
+              y: { type: "linear", position: "left", title: {display: true, text: yLabel}, min: 0, max: yMax, ticks: {callback: v=>v.toFixed(1)}, grid: { color: ctx=> ctx.tick.value===0 ? "black" : "rgba(0,0,0,0.1)" } }
+            },
+            plugins: {
+              tooltip: { callbacks: { label: ctx=> { let lab = ctx.dataset.label ? ctx.dataset.label+": " : ""; return lab+`(${ctx.parsed.x.toFixed(2)}, ${ctx.parsed.y.toFixed(2)})`; } } },
+              legend: { labels: { usePointStyle: true, pointStyle: "circle" } }
+            }
+          }
+        });
+        return;
+      }
+      // Modo: Divisor de voltaje (MOSFET incremental)
+      if(cfg==="divisorVoltajeMOSIncremental") {
+        // p1 = K, p2 = RS, p3 = unitIDON, p4 = VG, p5 = VGS_TH, p6 = VGSQ, p7 = ID (en A)
+        const K = p1, RS_val = p2, unit = p3, VG = p4, VGS_TH = p5, VGSQ = p6, IDQ = p7,
+              ctx = document.getElementById("fetChart").getContext("2d"),
+              yLabel = unit==="mA" ? "ID (mA)" : "ID (µA)",
+              convFactor = unit==="mA" ? 1000 : 1000000,
+              vgsMin = VGS_TH, vgsMax = VG,
+              vgsValues = Array.from({length:201}, (_,i)=> vgsMin + (vgsMax-vgsMin)*(i/200)),
+              idValues = vgsValues.map(vgs => vgs < VGS_TH ? 0 : K*Math.pow(vgs-VGS_TH,2)*convFactor),
+              loadLineData = [{x: VG, y: 0}, {x: VGS_TH, y: (VG-VGS_TH)/RS_val*convFactor}],
+              Qpoint = {x: VGSQ, y: IDQ*convFactor},
+              yMax = Math.max(...idValues, loadLineData[1].y, Qpoint.y);
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, {
+          type: "scatter",
+          data: {
+            datasets: [
+              { label: "Punto Q", data: [Qpoint], backgroundColor: "green", pointRadius: 7 },
+              { label: "Curva de transferencia", data: vgsValues.map((v,i)=>({x: v, y: idValues[i]})), borderColor: "blue", backgroundColor: "rgba(0,0,255,0.1)", showLine: true, pointRadius: 0 },
+              { label: "Recta de carga", data: loadLineData, borderColor: "orange", backgroundColor: "rgba(255,165,0,0.1)", showLine: true, pointRadius: 0 }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { type: "linear", position: "bottom", title: {display: true, text: "VGS (V)"}, min: vgsMin, max: vgsMax, ticks: {callback: v=>v.toFixed(1)}, grid: { drawBorder: true, color: ctx=> ctx.tick.value===0 ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.1)" } },
+              y: { type: "linear", position: "left", title: {display: true, text: yLabel}, min: 0, max: yMax, ticks: {callback: v=>v.toFixed(1)}, grid: { color: ctx=> ctx.tick.value===0 ? "black" : "rgba(0,0,0,0.1)" } }
+            },
+            plugins: {
+              tooltip: { callbacks: { label: ctx=> { let lab = ctx.dataset.label ? ctx.dataset.label+": " : ""; return lab+`(${ctx.parsed.x.toFixed(2)}, ${ctx.parsed.y.toFixed(2)})`; } } },
+              legend: { labels: { usePointStyle: true, pointStyle: "circle" } }
+            }
+          }
+        });
+        return;
+      }
+      // Resto de modos (se mantiene lo previo)...
+      const ctx = document.getElementById("fetChart").getContext("2d"),
+            unitIDSS = p3!==null ? p3 : "mA",
+            yLabel = unitIDSS==="mA" ? "ID (mA)" : "ID (µA)",
+            yMult = unitIDSS==="mA" ? 1 : 1000;
+      let vgsMin, vgsMax;
+      if(cfg==="polarizacionFija") { vgsMin = Math.min(p2, p6); vgsMax = 0; }
+      else { vgsMin = Math.min(p2, p6 || 0); vgsMax = Math.max(0, p4 || 0); if(p6>0) vgsMax = Math.max(vgsMax, p6); else vgsMin = Math.min(vgsMin, p4 - (p4/p3)*p3); }
+      const vgsValues = Array.from({length: 201}, (_,i)=> vgsMin + (vgsMax-vgsMin)*(i/200)),
+            idValues = vgsValues.map(vgs => vgs <= p2 ? 0 : p1*Math.pow(1-vgs/p2,2)*yMult),
+            loadLineData = (cfg==="autopolarizacion1") ? [{x:0, y:0}, {x:(-p1*p3*yMult)/1000, y:p1*yMult}] :
+                           (cfg==="polarizacionFija") ? (function(){ let maxY = p1*yMult; return [{x:p6, y:0}, {x:p6, y:maxY}]; })() :
+                           [{x:p4, y:0}, {x:p2, y: ((p4-p2)/p3)*1e3}];
+      let IDQ = p6 ? p1*Math.pow(1-p6/p2,2)*yMult : 0;
+      if(chart) chart.destroy();
+      const yMax = Math.max(...idValues, ...loadLineData.map(p=>p.y), p1*yMult);
+      chart = new Chart(ctx, {
+        type: "scatter",
+        data: {
+          datasets: [
+            { label: "Punto Q", data: p6 ? [{x:p6, y:IDQ}] : [], backgroundColor: "green", pointRadius: 7 },
+            { label: "Curva de transferencia", data: vgsValues.map((v,i)=>({x:v, y:idValues[i]})), borderColor: "blue", backgroundColor: "rgba(0,0,255,0.1)", showLine: true, pointRadius: 0 },
+            { label: "Recta de carga", data: loadLineData, borderColor: "orange", backgroundColor: "rgba(255,165,0,0.1)", showLine: true, pointRadius: 0 }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { type: "linear", position: "bottom", title: {display: true, text: "VGS (V)"}, ticks: {callback: v=>v.toFixed(1)}, min: vgsMin, max: vgsMax, grid: { drawBorder: true, color: ctx=> ctx.tick.value===0 ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.1)" } },
+            y: { type: "linear", position: "right", title: {display: true, text: yLabel}, ticks: {callback: v=>v.toFixed(1)}, min: 0, max: yMax, grid: { color: ctx=> ctx.tick.value===0 ? "black" : "rgba(0,0,0,0.1)" } }
+          },
+          plugins: {
+            tooltip: { callbacks: { label: ctx=> { let lab = ctx.dataset.label ? ctx.dataset.label+": " : ""; return lab+`(${ctx.parsed.x.toFixed(2)}, ${ctx.parsed.y.toFixed(2)})`; } } },
+            legend: { labels: { usePointStyle: true, pointStyle: "circle" } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
