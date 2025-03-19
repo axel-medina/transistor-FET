@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FET: Calculadora del Punto Q</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <div class="titulo-container">
+    <h1>Calculadora del punto Q de un transistor FET</h1>
+    <h2>Cálculo de intersección entre la curva de transferencia y recta de carga</h2>
+    <h4>Created by <a href="https://www.instagram.com/axel.medina07" style="color:#ff7400"">Axel Medina</a></h4>
+    <h5><a href="https://github.com/axel-medina/transistor-FET" style="color:#000">Estás usando la última versión</a> v4.0</h5>
+  </div>
+
+  <label for="configurationType" style="display:inline-block;width:auto">Selecciona el tipo de polarización:</label>
+  <select id="configurationType" onchange="showConfiguration()">
+    <option value="">Selecciona una opción</option>
+    <option value="polarizacionFija">Polarización fija</option>
+    <option value="autopolarizacion1">Autopolarización (JFET y MOSFET decremental)</option>
+    <option value="divisorVoltaje1">Divisor de voltaje (JFET y MOSFET decremental)</option>
+    <option value="autopolarizacionMOSIncremental">Autopolarización (MOSFET incremental y MESFET)</option>
+    <option value="divisorVoltajeMOSIncremental">Divisor de voltaje (MOSFET incremental y MESFET)</option>
+  </select>
+
+  <!-- Modo: Polarización fija -->
+  <div id="polarizacionFijaForm" class="hidden">
+    <h3>Polarización fija</h3>
+    <form id="inputFormFija">
+      <label for="VGG">VGG</label>
+      <input type="number" id="VGG" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGG"><option value="V">V</option></select><br>
+      <label for="IDSSFija">IDSS</label>
+      <input type="number" id="IDSSFija" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDSSFija"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VpFija">Vp</label>
+      <input type="number" id="VpFija" step="any" required size="15" placeholder="Valor negativo">
+      <select id="unitVpFija"><option value="V">V</option></select><br>
+      <button type="button" onclick="calculatePolarizacionFija()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Autopolarización (JFET/MOSFET decremental) -->
+  <div id="autopolarizacion1Form" class="hidden">
+    <h3>Autopolarización</h3>
+    <form id="inputFormAuto">
+      <label for="IDSS">IDSS</label>
+      <input type="number" id="IDSS" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDSS"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="Vp">Vp</label>
+      <input type="number" id="Vp" step="any" required size="15" placeholder="Valor negativo">
+      <select id="unitVp"><option value="V">V</option></select><br>
+      <label for="Rs">Rs</label>
+      <input type="number" id="Rs" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRs"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <button type="button" onclick="calculateIntersection()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Divisor de voltaje (JFET/MOSFET decremental) -->
+  <div id="divisorVoltaje1Form" class="hidden">
+    <h3>Divisor de voltaje</h3>
+    <form id="inputFormDivisor">
+      <label for="VDD">VDD</label>
+      <input type="number" id="VDD" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVDD"><option value="V">V</option></select><br>
+      <label for="R1">R1</label>
+      <input type="number" id="R1" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR1"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="R2">R2</label>
+      <input type="number" id="R2" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR2"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="RsDivisor">Rs</label>
+      <input type="number" id="RsDivisor" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRsDivisor"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="IDSSDivisor">IDSS</label>
+      <input type="number" id="IDSSDivisor" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDSSDivisor"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VpDivisor">Vp</label>
+      <input type="number" id="VpDivisor" step="any" required size="15" placeholder="Valor negativo">
+      <select id="unitVpDivisor"><option value="V">V</option></select><br>
+      <p><strong>Nota:</strong> El divisor se calcula en R2, en paralelo a la compuerta.</p>
+      <button type="button" onclick="calculateDivisorVoltaje()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Autopolarización (MOSFET incremental) -->
+  <div id="autopolarizacionMOSIncrementalForm" class="hidden">
+    <h3>Autopolarización (MOSFET incremental)</h3>
+    <form id="inputFormMOS">
+      <label for="VDD_MOS">VDD</label>
+      <input type="number" id="VDD_MOS" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVDD_MOS"><option value="V">V</option></select><br>
+      <label for="IDON">ID(ON)</label>
+      <input type="number" id="IDON" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDON"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VGS_ON">VGS(ON)</label>
+      <input type="number" id="VGS_ON" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_ON"><option value="V">V</option></select><br>
+      <label for="VGS_TH">VGS(TH)</label>
+      <input type="number" id="VGS_TH" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_TH"><option value="V">V</option></select><br>
+      <label for="RD">RD</label>
+      <input type="number" id="RD" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRD"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <button type="button" onclick="calculateAutopolarizacionMOSIncremental()">Calcular</button>
+    </form>
+  </div>
+
+  <!-- Modo: Divisor de voltaje (MOSFET incremental) -->
+  <div id="divisorVoltajeMOSIncrementalForm" class="hidden">
+    <h3>Divisor de voltaje (MOSFET incremental)</h3>
+    <form id="inputFormMOSDiv">
+      <label for="VDD_MOSDIV">VDD</label>
+      <input type="number" id="VDD_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVDD_MOSDIV"><option value="V">V</option></select><br>
+      <label for="R1_MOSDIV">R1</label>
+      <input type="number" id="R1_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR1_MOSDIV"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="R2_MOSDIV">R2</label>
+      <input type="number" id="R2_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitR2_MOSDIV"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="RS_MOSDIV">RS</label>
+      <input type="number" id="RS_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitRS_MOSDIV"><option value="Ω">Ω</option><option value="kΩ">kΩ</option><option value="MΩ">MΩ</option></select><br>
+      <label for="IDON_MOSDIV">ID(ON)</label>
+      <input type="number" id="IDON_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitIDON_MOSDIV"><option value="mA">mA</option><option value="uA">μA</option></select><br>
+      <label for="VGS_ON_MOSDIV">VGS(ON)</label>
+      <input type="number" id="VGS_ON_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_ON_MOSDIV"><option value="V">V</option></select><br>
+      <label for="VGS_TH_MOSDIV">VGS(TH)</label>
+      <input type="number" id="VGS_TH_MOSDIV" step="any" required size="15" placeholder="Valor positivo">
+      <select id="unitVGS_TH_MOSDIV"><option value="V">V</option></select><br>
+      <p><strong>Nota:</strong> El divisor se calcula en R2, en paralelo a la compuerta.</p>
+      <button type="button" onclick="calculateDivisorVoltajeMOSIncremental()">Calcular</button>
+    </form>
+  </div>
+
+  <h2>Resultado</h2>
+  <div id="result"></div>
+  <div id="chartContainer">
+    <canvas id="fetChart"></canvas>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>
